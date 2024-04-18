@@ -103,14 +103,19 @@ async function main() {
             operations.push(operation);
           }
           fogata.options.onlyOperation = false;
+          const maxOperationsPerTransaction = 10;
           (async () => {
-            try {
-              await txHandler.push(
-                fogata.name,
-                `collect for ${accounts.join(", ")}`,
-                operations
-              );
-            } catch {}
+            while(operations.length > 0) {
+              const opsInTx = operations.splice(0, maxOperationsPerTransaction);
+              const accsInTx = accounts.splice(0, maxOperationsPerTransaction);
+              try {
+                await txHandler.push(
+                  fogata.name,
+                  `collect for ${accsInTx.join(", ")}`,
+                  opsInTx
+                );
+              } catch {}
+            }
             fogata.reburn.next = Number(poolState.next_snapshot);
             fogata.paymentBeneficiaries.next =
               fogata.reburn.next - 15 * 60 * 1000;
